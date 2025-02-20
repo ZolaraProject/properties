@@ -11,20 +11,22 @@ import (
 )
 
 type Route struct {
-	Name        string
-	Method      string
-	Pattern     string
-	HandlerFunc http.HandlerFunc
+	Name                string
+	Method              string
+	Pattern             string
+	HandlerFunc         http.HandlerFunc
+	RequiredPermissions []string
 }
 
 type Routes []Route
 
-func NewRouter() *mux.Router {
+func NewRouter(jwtSecretKey string) *mux.Router {
 	router := mux.NewRouter().StrictSlash(true).UseEncodedPath()
 	for _, route := range routes {
 		var handler http.Handler
 		handler = route.HandlerFunc
 		handler = Logger(handler, route.Name)
+		handler = http.HandlerFunc(security.PermissionCheck(handler.ServeHTTP, route.RequiredPermissions, jwtSecretKey))
 
 		router.
 			Methods(route.Method).
@@ -52,6 +54,7 @@ var routes = Routes{
 		"GET",
 		"{{{basePathWithoutHost}}}/",
 		Index,
+		[]string{},
 	},
 
 	Route{
@@ -59,12 +62,14 @@ var routes = Routes{
 		"GET",
 		"/healthz",
 		Healthz,
+		[]string{},
 	},{{#apiInfo}}{{#apis}}{{#operations}}{{#operation}}
 
 	Route{
 		"{{operationId}}",
 		strings.ToUpper("{{httpMethod}}"),
 		"{{{basePathWithoutHost}}}{{{path}}}",
-		security.PermissionCheck({{operationId}}, []string{ {{#authMethods}}"{{name}}",{{/authMethods}} }),
+		{{operationId}},
+		[]string{ {{#authMethods}}"{{name}}",{{/authMethods}} },
 	},{{/operation}}{{/operations}}{{/apis}}{{/apiInfo}}
 }
