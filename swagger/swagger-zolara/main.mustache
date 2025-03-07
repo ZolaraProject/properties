@@ -33,7 +33,7 @@ func main() {
 
 	server := http.Server{
 		Addr:    fmt.Sprintf(":%v", {{serverPort}}),
-		Handler: sw.NewRouter(),
+		Handler: sw.NewRouter(sw.JwtSecretKey),
 	}
 
 	go server.ListenAndServe()
