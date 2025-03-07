@@ -24,12 +24,8 @@ import (
 func main() {
 	log.Printf("Server started hosting '{{appName}}' version '{{appVersion}}'.")
 
-	router := sw.NewRouter()
-
 	termChan := make(chan os.Signal)
 	signal.Notify(termChan, syscall.SIGTERM) // Received after the preStop hook
-
-	log.Fatal(http.ListenAndServe(":{{serverPort}}", router))
 
 	server := http.Server{
 		Addr:    fmt.Sprintf(":%v", {{serverPort}}),
